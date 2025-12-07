@@ -1,2 +1,10 @@
+// frontend/lib/api.ts
+
+const BACKEND_PROD_URL = "https://celestial-biome-app.onrender.com/";
+
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1")
+    ? "http://localhost:8000" // ローカルで Next dev ＋ Django 用
+    : BACKEND_PROD_URL;
