@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cb-backend
+    env_file:
+      - backend/.env.dev
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - PORT=8000
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: cb-frontend
+    env_file:
+      - frontend/.env.local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - PORT=3000
+
+  db:
+    image: postgres:16-alpine
+    container_name: cb-db
+    environment:
+      POSTGRES_DB: celestial_biome_dev
+      POSTGRES_USER: cb_user
+      POSTGRES_PASSWORD: cb_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
