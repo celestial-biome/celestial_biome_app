@@ -1,6 +1,6 @@
 // frontend/lib/api.ts
 
-const BACKEND_PROD_URL = "https://celestial-biome-app.onrender.com/";
+const BACKEND_PROD_URL = "https://celestial-biome-app.onrender.com";
 
 export const API_BASE_URL =
   typeof window !== "undefined" &&
