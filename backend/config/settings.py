@@ -111,4 +111,15 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
+# CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
+
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    # 環境変数 CORS_ALLOWED_ORIGINS にカンマ区切りで許可ドメインを入れる想定
+    CORS_ALLOWED_ORIGINS = [
+        origin
+        for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+        if origin
+    ]
