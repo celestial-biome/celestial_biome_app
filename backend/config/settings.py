@@ -1,56 +1,55 @@
-import os
 from pathlib import Path
-from datetime import timedelta
+import os
+import json
+
 from corsheaders.defaults import default_headers, default_methods
 
-import dj_database_url
-
-# =============================================================================
-# 基本設定
-# =============================================================================
+# GCS 用（USE_GCS=True のときだけ使う）
+try:
+    from google.oauth2 import service_account
+except ImportError:
+    service_account = None
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-change-me",  # 開発用。本番では必ず環境変数で上書き
-)
+# =====================
+# 基本設定
+# =====================
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "change-me-unsafe")
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "").lower() == "true"
 
-# 例: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,celestial-biome-app.onrender.com
+# 環境変数 DJANGO_ALLOWED_HOSTS="a.run.app,localhost" みたいな形で指定
 _raw_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "")
 if _raw_hosts:
     ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
 else:
     ALLOWED_HOSTS = ["*"] if DEBUG else []
 
-# =============================================================================
+# =====================
 # アプリケーション
-# =============================================================================
+# =====================
 
 INSTALLED_APPS = [
-    # サードパーティ
-    "corsheaders",
-    "rest_framework",
-    "rest_framework_simplejwt",
-
-    # Django 標準
+    "corsheaders",  # ★ CORS は一番上推奨
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    # プロジェクト内アプリ
-    "accounts",
-    "images",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "storages",  # django-storages (GCS)
+    "images",    # Celestial Biome の画像アプリ
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # ★ 最初の方に入れる
+    "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
     "django.middleware.security.SecurityMiddleware",
+    # Cloud Run/Render で WhiteNoise を使うならここ:
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -78,30 +77,37 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
-ASGI_APPLICATION = "config.asgi.application"
 
-# =============================================================================
-# データベース
-# =============================================================================
+# =====================
+# DATABASES
+# =====================
+# ※ 実際の環境に合わせて書き換えてOK。
+#   Cloud Run から Render Postgres に繋ぐなら、環境変数から読む形にする。
 
-# Render / 本番では DATABASE_URL を env で渡す
-# 例: postgres://user:password@host:5432/dbname
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgres://cb_user:cb_password@db:5432/celestial_biome_dev",  # ローカル docker-compose 用
-)
+if os.environ.get("DB_ENGINE"):
+    # 例: Cloud Run 用に個別指定するならこちら
+    DATABASES = {
+        "default": {
+            "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.postgresql"),
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+            "NAME": os.environ.get("DB_NAME", "postgres"),
+            "USER": os.environ.get("DB_USER", "postgres"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        }
+    }
+else:
+    # ローカル開発用: SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
-DATABASES = {
-    "default": dj_database_url.parse(
-        DATABASE_URL,
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
-
-# =============================================================================
-# 認証 / REST Framework / JWT
-# =============================================================================
+# =====================
+# パスワード検証
+# =====================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -118,6 +124,71 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# =====================
+# 国際化
+# =====================
+
+LANGUAGE_CODE = "ja"
+
+TIME_ZONE = "Asia/Tokyo"
+
+USE_I18N = True
+
+USE_TZ = True
+
+# =====================
+# 静的ファイル / メディア
+# =====================
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# STATICFILES_DIRS = [BASE_DIR / "static"]  # 必要なら
+
+# WhiteNoise を使うなら（任意）
+# STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# ---------- GCS 連携 ----------
+USE_GCS = os.environ.get("USE_GCS", "").lower() == "true"
+
+# デフォルト値（ローカルの場合）
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
+if USE_GCS:
+    # 環境変数：
+    # - GS_BUCKET_NAME
+    # - GS_CREDENTIALS_JSON （改行なしの JSON をそのまま）
+    GS_BUCKET_NAME = os.environ.get("GS_BUCKET_NAME")
+    GS_CREDENTIALS_JSON = os.environ.get("GS_CREDENTIALS_JSON")
+
+    if service_account is None:
+        raise RuntimeError("google-auth がインストールされていません")
+
+    if not GS_BUCKET_NAME or not GS_CREDENTIALS_JSON:
+        raise RuntimeError("GS_BUCKET_NAME と GS_CREDENTIALS_JSON を設定してください")
+
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+        json.loads(GS_CREDENTIALS_JSON)
+    )
+
+    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    GS_QUERYSTRING_AUTH = False  # 公開URLをクエリなしで
+    # 必要に応じて:
+    # GS_PROJECT_ID = os.environ.get("GS_PROJECT_ID")
+
+    MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
+
+# デバッグログ（必要なら）
+print("=== DEBUG USE_GCS:", USE_GCS)
+print("=== DEBUG DEFAULT_FILE_STORAGE:", DEFAULT_FILE_STORAGE)
+print("=== DEBUG MEDIA_URL:", MEDIA_URL)
+
+# =====================
+# REST FRAMEWORK / JWT
+# =====================
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -127,116 +198,59 @@ REST_FRAMEWORK = {
     ),
 }
 
+from datetime import timedelta
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# =============================================================================
-# 国際化 / タイムゾーン
-# =============================================================================
+# =====================
+# CORS / CSRF
+# =====================
 
-LANGUAGE_CODE = "ja"
-
-TIME_ZONE = "Asia/Tokyo"
-
-USE_I18N = True
-USE_TZ = True
-
-# =============================================================================
-# 静的ファイル / メディア
-# =============================================================================
-
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
-# デフォルトはローカルディスク
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
-# =============================================================================
-# CORS
-# =============================================================================
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 if DEBUG:
+    # 開発中はゆるくしておく
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     CORS_ALLOW_ALL_ORIGINS = False
-
     raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     CORS_ALLOWED_ORIGINS = [
         o.strip() for o in raw_origins.split(",") if o.strip()
     ]
 
-    CORS_ALLOW_HEADERS = list(default_headers) + [
-        "authorization",
-        "content-type",
-    ]
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization",
+    "content-type",
+]
 
-    CORS_ALLOW_METHODS = list(default_methods)
+CORS_ALLOW_METHODS = list(default_methods)
 
-# =============================================================================
-# GCS ストレージ（オプション）
-# =============================================================================
+# CSRF（将来 Django テンプレートを使う場合を見越して）
+_raw_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if _raw_csrf:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _raw_csrf.split(",") if o.strip()]
 
-# 環境変数 USE_GCS が "true" / "True" / "1" / "yes" のときだけ GCS を使う
-USE_GCS = os.environ.get("USE_GCS", "").lower() in ("true", "1", "yes")
+# =====================
+# ロギング（任意）
+# =====================
 
-if USE_GCS:
-    INSTALLED_APPS += ["storages"]
-
-    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-
-    GS_BUCKET_NAME = os.environ.get("GS_BUCKET_NAME")
-    if not GS_BUCKET_NAME:
-        raise RuntimeError("USE_GCS=True の場合、GS_BUCKET_NAME が必要です。")
-
-    # GCS の公開 URL
-    MEDIA_URL = os.environ.get(
-        "MEDIA_URL",
-        f"https://storage.googleapis.com/{GS_BUCKET_NAME}/",
-    )
-
-    from google.oauth2 import service_account
-    import json
-
-    GS_CREDENTIALS_JSON = os.environ.get("GS_CREDENTIALS_JSON", "")
-    if not GS_CREDENTIALS_JSON:
-        raise RuntimeError("USE_GCS=True の場合、GS_CREDENTIALS_JSON が必要です。")
-
-    try:
-        info = json.loads(GS_CREDENTIALS_JSON)
-    except json.JSONDecodeError as e:
-        raise RuntimeError("GS_CREDENTIALS_JSON が正しい JSON ではありません。") from e
-
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_info(info)
-
-# =============================================================================
-# その他
-# =============================================================================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "images": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-print("=== DEBUG: USE_GCS =", USE_GCS)
-
-if USE_GCS:
-    print("=== DEBUG: DEFAULT_FILE_STORAGE should be GCS")
-    print("=== DEBUG: GS_BUCKET_NAME =", os.environ.get("GS_BUCKET_NAME"))
-else:
-    print("=== DEBUG: USING LOCAL MEDIA (FileSystemStorage)")
-
-
-
-print("=== DEBUG USE_GCS:", USE_GCS)
-print("=== DEBUG DEFAULT_FILE_STORAGE:", globals().get("DEFAULT_FILE_STORAGE", "(not set)"))
-print("=== DEBUG MEDIA_URL:", MEDIA_URL)
