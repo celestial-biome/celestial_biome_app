@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from django.core.files.storage import default_storage
+
 
 import dj_database_url
 
@@ -181,10 +181,10 @@ else:
 # GCS ストレージ（オプション）
 # =============================================================================
 
+# 環境変数 USE_GCS が "true" / "True" / "1" / "yes" のときだけ GCS を使う
 USE_GCS = os.environ.get("USE_GCS", "").lower() in ("true", "1", "yes")
 
 if USE_GCS:
-    # pip: django-storages[google], google-cloud-storage
     INSTALLED_APPS += ["storages"]
 
     DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
@@ -193,7 +193,7 @@ if USE_GCS:
     if not GS_BUCKET_NAME:
         raise RuntimeError("USE_GCS=True の場合、GS_BUCKET_NAME が必要です。")
 
-    # GCS の公開 URL。必要ならカスタムドメインや CDN に変更も可
+    # GCS の公開 URL
     MEDIA_URL = os.environ.get(
         "MEDIA_URL",
         f"https://storage.googleapis.com/{GS_BUCKET_NAME}/",
@@ -203,7 +203,6 @@ if USE_GCS:
     import json
 
     GS_CREDENTIALS_JSON = os.environ.get("GS_CREDENTIALS_JSON", "")
-
     if not GS_CREDENTIALS_JSON:
         raise RuntimeError("USE_GCS=True の場合、GS_CREDENTIALS_JSON が必要です。")
 
@@ -229,5 +228,5 @@ if USE_GCS:
 else:
     print("=== DEBUG: USING LOCAL MEDIA (FileSystemStorage)")
 
-print("=== DEBUG: default_storage =", default_storage.__class__)
+
 
