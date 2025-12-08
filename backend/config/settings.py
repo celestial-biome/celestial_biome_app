@@ -16,7 +16,7 @@ SECRET_KEY = os.environ.get(
     "django-insecure-change-me",  # 開発用。本番では必ず環境変数で上書き
 )
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+DEBUG = os.environ.get("DJANGO_DEBUG", "").lower() == "true"
 
 # 例: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,celestial-biome-app.onrender.com
 _raw_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "")
@@ -171,10 +171,16 @@ if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     CORS_ALLOW_ALL_ORIGINS = False
-    # 例: CORS_ALLOWED_ORIGINS=https://celestial-biome-app.onrender.com,https://www.example.com
-    _raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+    raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     CORS_ALLOWED_ORIGINS = [
-        o.strip() for o in _raw_origins.split(",") if o.strip()
+        o.strip() for o in raw_origins.split(",") if o.strip()
+    ]
+    # 追加でヘッダ許可（念のため）
+    from corsheaders.defaults import default_headers
+
+    CORS_ALLOW_HEADERS = list(default_headers) + [
+        "authorization",
+        "content-type",
     ]
 
 # =============================================================================
