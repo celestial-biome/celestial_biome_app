@@ -89,7 +89,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_ROOT = BASE_DIR / "media/images"
+MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -123,3 +123,34 @@ else:
         for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
         if origin
     ]
+
+
+INSTALLED_APPS += ["storages"]
+
+# --- GCS ストレージ設定 ---
+USE_GCS = os.environ.get("USE_GCS", "False") == "True"
+
+if USE_GCS:
+    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+    GS_BUCKET_NAME = os.environ.get("GS_BUCKET_NAME")
+
+    # 必要なら独自ドメインやCDN URLを MEDIA_URL に
+    MEDIA_URL = os.environ.get(
+        "MEDIA_URL",
+        f"https://storage.googleapis.com/{GS_BUCKET_NAME}/",
+    )
+
+    # 認証情報は環境変数で渡す（後で Render に設定）
+    GS_CREDENTIALS_JSON = os.environ.get("GS_CREDENTIALS_JSON")
+    if GS_CREDENTIALS_JSON:
+        import json
+        from google.oauth2 import service_account
+
+        GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
+            json.loads(GS_CREDENTIALS_JSON)
+        )
+else:
+    # これまで通りローカルディスク
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
