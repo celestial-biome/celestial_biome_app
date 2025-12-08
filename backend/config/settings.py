@@ -209,30 +209,15 @@ SIMPLE_JWT = {
 # CORS / CSRF
 # =====================
 
+CORS_ALLOW_ALL_ORIGINS = True    # ★ まず全部許可
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
-
-if DEBUG:
-    # 開発中はゆるくしておく
-    CORS_ALLOW_ALL_ORIGINS = True
-else:
-    CORS_ALLOW_ALL_ORIGINS = False
-    raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
-    CORS_ALLOWED_ORIGINS = [
-        o.strip() for o in raw_origins.split(",") if o.strip()
-    ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "authorization",
     "content-type",
 ]
 
-CORS_ALLOW_METHODS = list(default_methods)
-
-# CSRF（将来 Django テンプレートを使う場合を見越して）
-_raw_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
-if _raw_csrf:
-    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _raw_csrf.split(",") if o.strip()]
+CORS_ALLOW_METHODS = list(default_methods)  # GET, POST, OPTIONS など
 
 # =====================
 # ロギング（任意）
