@@ -46,8 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "config.middleware.SimpleCorsDebugMiddleware"
-    # "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
+    "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
     "django.middleware.security.SecurityMiddleware",
     # Cloud Run/Render で WhiteNoise を使うならここ:
     # "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -212,13 +211,6 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_ALL_ORIGINS = True    # ★ まず全部許可
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "authorization",
-    "content-type",
-]
-
-CORS_ALLOW_METHODS = list(default_methods)  # GET, POST, OPTIONS など
 
 # =====================
 # ロギング（任意）
