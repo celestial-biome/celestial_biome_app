@@ -180,7 +180,7 @@ else:
 # GCS ストレージ（オプション）
 # =============================================================================
 
-USE_GCS = os.environ.get("USE_GCS", "False") == "True"
+USE_GCS = os.environ.get("USE_GCS", "").lower() in ("true", "1", "yes")
 
 if USE_GCS:
     # pip: django-storages[google], google-cloud-storage
@@ -218,3 +218,12 @@ if USE_GCS:
 # =============================================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+print("=== DEBUG: USE_GCS =", USE_GCS)
+
+if USE_GCS:
+    print("=== DEBUG: DEFAULT_FILE_STORAGE should be GCS")
+    print("=== DEBUG: GS_BUCKET_NAME =", os.environ.get("GS_BUCKET_NAME"))
+else:
+    print("=== DEBUG: USING LOCAL MEDIA (FileSystemStorage)")
