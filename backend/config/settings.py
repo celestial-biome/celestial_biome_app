@@ -46,8 +46,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
     # Cloud Run/Render で WhiteNoise を使うならここ:
     # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -213,6 +213,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://celestial-biome-app-front.onrender.com"
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://celestial-biome-app-front.onrender.com",
 ]
 
 # =====================
