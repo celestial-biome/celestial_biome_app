@@ -46,7 +46,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
+    "config.middleware.SimpleCorsDebugMiddleware"
+    # "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
     "django.middleware.security.SecurityMiddleware",
     # Cloud Run/Render で WhiteNoise を使うならここ:
     # "whitenoise.middleware.WhiteNoiseMiddleware",
