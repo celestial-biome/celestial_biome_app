@@ -210,6 +210,7 @@ SIMPLE_JWT = {
 # =====================
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 if DEBUG:
     # 開発中はゆるくしておく
