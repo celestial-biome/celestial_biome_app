@@ -230,3 +230,6 @@ else:
 
 
 
+print("=== DEBUG USE_GCS:", USE_GCS)
+print("=== DEBUG DEFAULT_FILE_STORAGE:", globals().get("DEFAULT_FILE_STORAGE", "(not set)"))
+print("=== DEBUG MEDIA_URL:", MEDIA_URL)
