@@ -1,13 +1,22 @@
-from django.db import models
-from django.contrib.auth import get_user_model
+# backend/images/models.py
 
-User = get_user_model()
+from django.db import models
+from django.contrib.auth.models import User
+
+from .storage import get_image_storage
+
 
 class Image(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="images")
     title = models.CharField(max_length=255, blank=True)
-    image = models.ImageField(upload_to="images/")
+
+    # ★ここで storage を明示的に指定
+    image = models.ImageField(
+        storage=get_image_storage(),  # ← ここがポイント
+        upload_to="images/",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self) -> str:
-        return self.title or f"Image {self.pk}"
+    def __str__(self):
+        return self.title or f"Image {self.id}"
