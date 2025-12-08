@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.core.files.storage import default_storage
 
 import dj_database_url
 
@@ -227,3 +228,6 @@ if USE_GCS:
     print("=== DEBUG: GS_BUCKET_NAME =", os.environ.get("GS_BUCKET_NAME"))
 else:
     print("=== DEBUG: USING LOCAL MEDIA (FileSystemStorage)")
+
+print("=== DEBUG: default_storage =", default_storage.__class__)
+
