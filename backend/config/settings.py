@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-
+from corsheaders.defaults import default_headers, default_methods
 
 import dj_database_url
 
@@ -171,17 +171,18 @@ if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     CORS_ALLOW_ALL_ORIGINS = False
+
     raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     CORS_ALLOWED_ORIGINS = [
         o.strip() for o in raw_origins.split(",") if o.strip()
     ]
-    # 追加でヘッダ許可（念のため）
-    from corsheaders.defaults import default_headers
 
     CORS_ALLOW_HEADERS = list(default_headers) + [
         "authorization",
         "content-type",
     ]
+
+    CORS_ALLOW_METHODS = list(default_methods)
 
 # =============================================================================
 # GCS ストレージ（オプション）
