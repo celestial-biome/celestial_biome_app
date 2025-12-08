@@ -2,27 +2,37 @@
 
 import logging
 from django.conf import settings
-from rest_framework import generics, permissions
+from rest_framework import viewsets, permissions
 
 from .models import Image
 from .serializers import ImageSerializer
 
 logger = logging.getLogger(__name__)
 
-class ImageListCreateView(generics.ListCreateAPIView):
+
+class ImageViewSet(viewsets.ModelViewSet):
+    """
+    /api/images/ で一覧・作成・更新・削除を扱う ViewSet
+    """
+
     queryset = Image.objects.all().order_by("-created_at")
     serializer_class = ImageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        """
+        画像アップロード時に呼ばれるフック。
+        ここで owner をセットしつつ、GCS への保存状況をログに出す。
+        """
         instance = serializer.save(owner=self.request.user)
 
-        # ここで「Django がどう認識しているか」を全部ログに吐く
         logger.warning(
             "Image saved: id=%s name=%s url=%s storage=%s USE_GCS=%s",
             instance.id,
-            instance.image.name,         # GCS 上のパスになるはず（images/xxx.png）
-            getattr(instance.image, "url", None),  # GCS の URL になるはず
-            type(instance.image.storage).__name__, # GoogleCloudStorage になってるか？
+            instance.image.name,  # GCS 上のパス（images/xxx.png）になるはず
+            getattr(instance.image, "url", None),
+            type(instance.image.storage).__name__,
             getattr(settings, "USE_GCS", None),
         )
+
+        return instance
