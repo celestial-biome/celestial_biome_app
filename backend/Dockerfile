@@ -1,12 +1,9 @@
 # ベースイメージ
-FROM python:3.11
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm
 
 # Python の基本設定
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-
-# ★ 以下の行を追加してください（キャッシュ破棄用のおまじない）
-RUN echo "Cache bust: 2025-12-09-reset"
 
 # 作業ディレクトリ
 WORKDIR /app
@@ -20,8 +17,8 @@ RUN apt-get update \
 # └ Cloud Build の build context を `backend` にしている前提
 COPY requirements.txt .
 
-# ライブラリインストール
-RUN pip install --no-cache-dir -r requirements.txt
+# ライブラリインストール（uv を使用）
+RUN uv pip install --no-cache --system -r requirements.txt
 
 # アプリ本体をコピー
 COPY . .

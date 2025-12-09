@@ -6,9 +6,14 @@ DB: PostgreSQL (ローカルでは Docker コンテナ, 本番は Render Postgre
 
 ## ローカル開発
 
+1. `.env` を準備します。
+   - Backend 用: `backend/.env.dev` を `backend/.env.example` からコピーして使用します。
+     - `DJANGO_SECRET_KEY` などは適宜変更してください。
+   - Frontend 用: `frontend/.env.local` を作成し、`NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` を設定
+2. Docker をビルド＆起動します。
+
 ```bash
-docker compose build
-docker compose up
+docker compose up --build
 ```
 
 - Backend API: http://localhost:8000/
@@ -31,7 +36,7 @@ Backend の主なエンドポイント:
 - Backend 用 Web Service:
   - Root: `backend`
   - Runtime: Docker
-  - Dockerfile: `backend/Dockerfile`
+  - Dockerfile: `backend/Dockerfile`（uv で Python 依存をインストール）
   - 環境変数: `DATABASE_URL` などを設定
 - Frontend 用 Web Service:
   - Root: `frontend`

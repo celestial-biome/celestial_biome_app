@@ -1,1 +1,17 @@
-"frontend/.env.local"
+# Frontend
+frontend/.env.local
+frontend/node_modules/
+
+# Backend
+backend/.env*
+!backend/.env.example
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS
+.DS_Store
