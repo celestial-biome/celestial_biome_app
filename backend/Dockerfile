@@ -5,6 +5,11 @@ FROM ghcr.io/astral-sh/uv:python3.11-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# 【追記 1】 venv の場所を定義し、パスを通す
+# これにより、以降の python コマンドは自動的に venv 内のものを参照します
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 # 作業ディレクトリ
 WORKDIR /app
 
@@ -14,21 +19,22 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # ここで backend 配下の requirements.txt をコピー
-# └ Cloud Build の build context を `backend` にしている前提
 COPY requirements.txt .
 
-# ライブラリインストール（uv を使用）
-RUN uv pip install --no-cache --system -r requirements.txt
+# 【追記 2】 venv を作成
+# uv venv は python -m venv より高速です
+RUN uv venv $VIRTUAL_ENV
+
+# 【変更】 ライブラリインストール
+# --system オプションを削除しました（venv にインストールするため）
+RUN uv pip install --no-cache -r requirements.txt
 
 # アプリ本体をコピー
 COPY . .
 
-# 環境変数（Cloud Run から PORT が渡される）
+# 環境変数
 ENV PORT=8080
 
-# 静的ファイルを使うなら（任意）
-# RUN python manage.py collectstatic --noinput
-
 # Cloud Run 用エントリポイント
-# PORT が Cloud Run から渡されるので、それを使って bind
+# パスが通っているため、venv 内の gunicorn が自動的に使われます
 CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --access-logfile - --error-logfile -"]
