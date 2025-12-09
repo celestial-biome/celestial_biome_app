@@ -5,6 +5,9 @@ FROM python:3.11
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# ★ 以下の行を追加してください（キャッシュ破棄用のおまじない）
+RUN echo "Cache bust: 2025-12-09-reset"
+
 # 作業ディレクトリ
 WORKDIR /app
 
