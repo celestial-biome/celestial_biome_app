@@ -4,6 +4,9 @@ import json
 
 from corsheaders.defaults import default_headers, default_methods
 
+print("=== DEBUG SETTINGS MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
+print("=== DEBUG DJANGO_DEBUG:", os.environ.get("DJANGO_DEBUG"))
+
 # GCS 用（USE_GCS=True のときだけ使う）
 try:
     from google.oauth2 import service_account
@@ -32,7 +35,7 @@ else:
 # =====================
 
 INSTALLED_APPS = [
-    "corsheaders",  # ★ CORS は一番上推奨
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -46,8 +49,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # ★ CommonMiddleware より前
     # Cloud Run/Render で WhiteNoise を使うならここ:
     # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
