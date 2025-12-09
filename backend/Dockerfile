@@ -31,4 +31,4 @@ ENV PORT=8080
 
 # Cloud Run 用エントリポイント
 # PORT が Cloud Run から渡されるので、それを使って bind
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080}"]
+CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"]
