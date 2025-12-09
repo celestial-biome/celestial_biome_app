@@ -24,11 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # 環境変数（Cloud Run から PORT が渡される）
-ENV PORT=8000
+ENV PORT=8080
 
 # 静的ファイルを使うなら（任意）
 # RUN python manage.py collectstatic --noinput
 
 # Cloud Run 用エントリポイント
 # PORT が Cloud Run から渡されるので、それを使って bind
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080}"]
