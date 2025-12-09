@@ -1,5 +1,5 @@
 # ベースイメージ
-FROM python:3.12-slim
+FROM python:3.11
 
 # Python の基本設定
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -31,4 +31,4 @@ ENV PORT=8080
 
 # Cloud Run 用エントリポイント
 # PORT が Cloud Run から渡されるので、それを使って bind
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"]
+CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --access-logfile - --error-logfile -"]
