@@ -1,8 +1,9 @@
 # Celestial Biome Prototype
 
-Backend: Django REST Framework (JWT 認証, ユーザー登録, 画像アップロード)
-Frontend: Next.js (App Router) + TypeScript + Tailwind CSS
-DB: PostgreSQL (ローカルでは Docker コンテナ, 本番は Render PostgreSQL を想定)
+Backend: Django REST Framework (JWT 認証, ユーザー登録, 画像アップロード, 本番は cloud run でデプロイ) 
+Frontend: Next.js (App Router) + TypeScript + Tailwind CSS （本番は Render でデプロイ）
+DB: PostgreSQL (ローカルでは Docker コンテナ, 本番は Render PostgreSQL を想定) 
+Strage: GCS （画像ファイルは GCS に格納）
 
 ## ローカル開発
 
