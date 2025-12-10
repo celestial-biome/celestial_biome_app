@@ -8,6 +8,7 @@ from .serializers import RegisterSerializer, UserSerializer
 
 User = get_user_model()
 
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -17,6 +18,7 @@ class RegisterView(APIView):
             user = serializer.save()
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
