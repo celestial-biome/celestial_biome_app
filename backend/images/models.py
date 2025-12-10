@@ -1,7 +1,7 @@
 # backend/images/models.py
 
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from .storage import get_image_storage
 

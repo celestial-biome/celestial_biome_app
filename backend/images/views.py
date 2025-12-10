@@ -1,8 +1,9 @@
 # backend/images/views.py
 
 import logging
+
 from django.conf import settings
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
 
 from .models import Image
 from .serializers import ImageSerializer
