@@ -194,7 +194,9 @@ if USE_GCS:
         raise ImproperlyConfigured("google-auth がインストールされていません")
 
     if not GS_BUCKET_NAME or not GS_CREDENTIALS_JSON:
-        raise ImproperlyConfigured("GS_BUCKET_NAME と GS_CREDENTIALS_JSON を設定してください")
+        raise ImproperlyConfigured(
+            "GS_BUCKET_NAME と GS_CREDENTIALS_JSON を設定してください"
+        )
 
     GS_CREDENTIALS = service_account.Credentials.from_service_account_info(
         json.loads(GS_CREDENTIALS_JSON)
@@ -215,9 +217,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 SIMPLE_JWT = {
