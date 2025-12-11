@@ -65,4 +65,6 @@ django_settings_module = "config.settings"
 [dependency-groups]
 dev = [
     "ruff>=0.14.8",
+    "pytest>=8.3",
+    "pytest-django>=4.9",
 ]
