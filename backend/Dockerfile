@@ -1,40 +1,37 @@
-# ベースイメージ
+# backend/Dockerfile
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm
 
 # Python の基本設定
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# 【追記 1】 venv の場所を定義し、パスを通す
-# これにより、以降の python コマンドは自動的に venv 内のものを参照します
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# 【重要】 uv が作成する仮想環境のパスを固定する
+# これを設定すると uv sync は .venv ではなくここに環境を作ります
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
 
-# 作業ディレクトリ
+# パスを通す（これで python や pytest コマンドがそのまま使えます）
+ENV PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
+
 WORKDIR /app
 
-# 必要ならビルドツール（psycopg2 など用）
+# 必要なビルドツール
 RUN apt-get update \
   && apt-get install -y --no-install-recommends build-essential \
   && rm -rf /var/lib/apt/lists/*
 
-# ここで backend 配下の requirements.txt をコピー
-COPY requirements.txt .
+# 依存関係定義ファイルのコピー
+# uv.lock がまだない場合でもビルドできるように pyproject.toml だけ先にコピー
+COPY pyproject.toml uv.lock* ./
 
-# 【追記 2】 venv を作成
-# uv venv は python -m venv より高速です
-RUN uv venv $VIRTUAL_ENV
+# 【重要】 ライブラリのインストール (uv sync)
+# --frozen: uv.lock があればそれを厳密に守る（なければエラーになるので初回は外しても良いが、通常はlockファイルを含める）
+# --no-install-project: プロジェクト自体（djangoアプリ）はインストールせず、ライブラリだけ入れる
+RUN uv sync --no-install-project
 
-# 【変更】 ライブラリインストール
-# --system オプションを削除しました（venv にインストールするため）
-RUN uv pip install --no-cache -r requirements.txt
-
-# アプリ本体をコピー
+# ソースコードのコピー
 COPY . .
 
-# 環境変数
-ENV PORT=8080
+ENV PORT=8000
 
-# Cloud Run 用エントリポイント
-# パスが通っているため、venv 内の gunicorn が自動的に使われます
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --access-logfile - --error-logfile -"]
+# venvにパスが通っているので、そのままコマンドを叩けばOK
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-"]

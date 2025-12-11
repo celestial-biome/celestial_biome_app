@@ -5,13 +5,19 @@ description = "Modern Django REST Framework Project with uv and Ruff"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "django>=5.0",
-    "djangorestframework>=3.15",
-    "drf-spectacular>=0.27",  # OpenAPIスキーマ生成
+    "django>=5.1,<5.2",
+    "djangorestframework>=3.15,<3.16",
+    "djangorestframework-simplejwt>=5.3,<5.4",
+    "psycopg2-binary>=2.9,<3.0",
+    "gunicorn>=21.2",
+    "Pillow>=10.0,<11.0",
+    "django-cors-headers==4.4.0",
+    "dj-database-url>=2.1,<3.0",
+    "django-storages[google]>=1.14,<1.15",
+    "google-cloud-storage>=2.0,<3.0",
+    "drf-spectacular>=0.27",  # OpenAPIスキーマ
     "django-filter>=24.2",    # フィルタリング
     "dj-rest-auth>=6.0",      # 認証
-    "djangorestframework-simplejwt>=5.3", # JWT
-    "gunicorn>=22.0",         # 本番用サーバー
 ]
 
 [build-system]
@@ -20,48 +26,25 @@ build-backend = "hatchling.build"
 
 # --- Ruff 設定 (Linter & Formatter) ---
 [tool.ruff]
-target-version = "py312"  # 使用するPythonバージョンに合わせる
-line-length = 88          # Black推奨の長さ (120にするチームも多いです)
+target-version = "py312"
+line-length = 88
 
 [tool.ruff.lint]
-# 有効にするルールセット
-select = [
-    "E",  # pycodestyle errors (標準的なエラー)
-    "W",  # pycodestyle warnings (標準的な警告)
-    "F",  # Pyflakes (未使用インポートなど)
-    "I",  # isort (importの自動整列)
-    "B",  # flake8-bugbear (バグの温床になりやすいコードの検出)
-    "UP", # pyupgrade (古い構文を新しく修正)
-    "DJ", # flake8-django (Django特有のベストプラクティスチェック) ✨重要
-]
-# 無視するルール
+select = ["E", "W", "F", "I", "B", "UP", "DJ"]
 ignore = []
-
-# 保存時に自動修正する内容
 fixable = ["ALL"]
 
 [tool.ruff.format]
-quote-style = "double"    # ダブルクォートに統一
-indent-style = "space"    # インデントはスペース
+quote-style = "double"
+indent-style = "space"
 
-# --- Pytest 設定 (テストランナー) ---
+# --- Pytest 設定 ---
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--ds=config.settings --reuse-db" # 設定ファイルのパスは実際のプロジェクトに合わせて変更してください
-python_files = [
-    "tests.py",
-    "test_*.py",
-    "*_tests.py"
-]
+addopts = "--ds=config.settings --reuse-db"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
 
-# --- Mypy 設定 (型チェック) ---
-# ※ djangorestframework-stubs を使う場合に有効化
-[tool.mypy]
-plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
-
-[tool.django-stubs]
-django_settings_module = "config.settings"
-
+# --- Dev Dependencies (uvが管理) ---
 [dependency-groups]
 dev = [
     "ruff>=0.14.8",

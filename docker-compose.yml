@@ -14,15 +14,19 @@ services:
       - db
     environment:
       - PORT=8000
+      # DjangoがDocker外からのアクセスを許可するために必要
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend
     volumes:
       - ./backend:/app
+      # ★重要: ローカルの .venv がもしあっても、コンテナ内の環境を壊さないように除外するテクニック
+      # これを入れると、ローカルに .venv があってもコンテナからは見えなくなります
+      - /app/.venv
 
   frontend:
+    # (既存のまま変更なし)
     build:
       context: .
       dockerfile: frontend/Dockerfile
-      # ★もし私の提案したマルチステージビルドのDockerfileを使うなら、
-      # ここで target: deps を指定するとビルドが爆速になります。
       target: deps 
     container_name: cb-frontend
     env_file:
@@ -33,13 +37,13 @@ services:
       - backend
     environment:
       - PORT=3000
-    # ★ここから下が重要な追加・変更点です
     volumes:
-      - ./frontend:/app       # 手元のファイルをコンテナに同期（これで編集可能に！）
-      - /app/node_modules     # コンテナ内のnode_modulesを上書きされないように保護する設定
-    command: npm run dev      # DockerfileのCMD（start）を無視して、開発モードで起動
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
 
   db:
+    # (既存のまま変更なし)
     image: postgres:16-alpine
     container_name: cb-db
     environment:
