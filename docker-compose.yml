@@ -15,12 +15,15 @@ services:
     environment:
       - PORT=8000
     volumes:
-      - ./backend:/app  
+      - ./backend:/app
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      # ★もし私の提案したマルチステージビルドのDockerfileを使うなら、
+      # ここで target: deps を指定するとビルドが爆速になります。
+      target: deps 
     container_name: cb-frontend
     env_file:
       - frontend/.env.local
@@ -30,6 +33,11 @@ services:
       - backend
     environment:
       - PORT=3000
+    # ★ここから下が重要な追加・変更点です
+    volumes:
+      - ./frontend:/app       # 手元のファイルをコンテナに同期（これで編集可能に！）
+      - /app/node_modules     # コンテナ内のnode_modulesを上書きされないように保護する設定
+    command: npm run dev      # DockerfileのCMD（start）を無視して、開発モードで起動
 
   db:
     image: postgres:16-alpine

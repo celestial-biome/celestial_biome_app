@@ -61,7 +61,7 @@ export default function LoginPage() {
         className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl p-6 space-y-4"
       >
         <h1 className="text-xl font-semibold text-center mb-2">
-          ログイン
+          Login
         </h1>
 
         {error && (
